@@ -133,9 +133,41 @@ def prove_spf(boundary, message):
 
     return result
 
-def prove_dkim():
 
+def parse_dkim_tags(signature: str) -> dict:
+    """
+    Parse one DKIM-Signature header into {tag: value}.
+    Split on ';', then each piece on the FIRST '='; strip all whitespace from values.
+    """
     pass
+
+
+def google_dkim_verdicts(header: str) -> list[dict]:
+    """
+    Pull every dkim= clause out of the trusted Authentication-Results.
+    Each -> {"verdict": "pass", "domain": "nytimes.com", "selector": "scph20250409", "b_prefix": "SIzWjmvA"}
+    (domain comes from header.d=, or from header.i= after the '@')
+    """
+    pass
+
+
+def prove_dkim(boundary, message) -> list[dict]:
+    """
+    Report each DKIM signature and Google's verdict for it. No judging here.
+
+    message:  parsed email dict
+    boundary: boundary hop, used only to pick the trusted Authentication-Results
+
+    returns: one dict per DKIM-Signature (empty list if there are none)
+    """
+    header = trusted_auth_result(boundary, message)
+    verdicts = google_dkim_verdicts(header)
+    results = []
+    for signature in message.get("dkim_signatures", []):
+        tags = parse_dkim_tags(signature)
+        # find this signature's verdict: match b_prefix to tags["b"], else d + s
+        # build the result dict, call alignment(tags["d"], from_domain)
+    return results
 
 def prove_dmarc():
 
